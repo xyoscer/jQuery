@@ -1,5 +1,6 @@
 /**
  * Created by XiYin on 2017/5/1.
+ * 回调对象，对函数的统一管理
  */
 // 对Callbacks()的参数进行处理
 var optionsCache = {}; // 定义一个缓存变量，用于存放参数信息
