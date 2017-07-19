@@ -10,7 +10,7 @@ function createOptions( options ) {
     // 设置缓存为空，将变量object与optionCache[options]指向同一个空对象
     // 方便后面为object添加属性时，同时也就给optionsCache[options]添加了属性，就不必最后把object对象再赋给optionsCache
     var object = optionsCache[ options ] = {};
-    // 取出非空格的字符["once","memeory"] object={once:true,memeory:true}
+    // 取出非空格的字符["once","memeory"] object（options）={once:true,memory:true}
     // 此时optionsCache = {"once memory":{once:true,memeory:true}}
     // 对匹配出来的数组的每一个元素进行设置该属性为true
     jQuery.each( options.match( core_rnotwhite ) || [], function( _, flag ) {
@@ -26,6 +26,7 @@ function createOptions( options ) {
  *	memory:（记忆）作用在add()函数中，记录上一次触发回调函数列表时的参数，之后添加的任何回调函数都将用记录的参数值立即调用
  *	unique:（去重）确保一个回调函数只能被添加一次，回调函数列表中没有重复值。也是作用于add()中 *
  *	stopOnFalse:当某个回调函数返回false时，中断执行，作用于for循环中
+ * 返回self对象
  *
  */
 jQuery.Callbacks = function( options ) {
@@ -93,12 +94,12 @@ jQuery.Callbacks = function( options ) {
                     (function add( args ) {
                         // 对cb.add()的参数进行处理，jQuery.each()可以对数组，和类数组进行遍历
                         // _ 这个参数没有特殊意义，跟数组的下标索引的意思一样
+                        // cb.add(fn1),cb.add(fn1.fn2);cb.add([fn1.fn2])
                         jQuery.each( args, function( _, arg ) {
                             var type = jQuery.type( arg );
                             if ( type === "function" ) {
                                 // 判断add()的参数是函数的话，并且Callback()没有unique参数，则直接将该回调函数放入list数组中
                                 // 若有unique参数，但是list的列表数组中还没有这个回调函数，也将回调函数放入list数组中
-
                                 if ( !options.unique || !self.has( arg ) ) {
                                     list.push( arg );
                                 }
@@ -111,7 +112,6 @@ jQuery.Callbacks = function( options ) {
                     })( arguments );
 
                     // 如果回调函数列表正在执行，则修正firingLength下标,使得新添加的回调函数也得执行。
-
                     if ( firing ) {
                         firingLength = list.length;
                     } // 在memory模式下，如果回调函数列表未在执行
@@ -129,9 +129,8 @@ jQuery.Callbacks = function( options ) {
                 if ( list ) {
                     jQuery.each( arguments, function( _, arg ) {
                         var index;
-
                         while( ( index = jQuery.inArray( arg, list, index ) ) > -1 ) {
-                            // arg回调函数在list数组中存在，则直接splie()删除list数组中的这个回调函数
+                            // arg回调函数在list数组中存在，则直接splice()删除list数组中的这个回调函数
                             list.splice( index, 1 );
                             //如果回调函数列表正在执行
                             if ( firing ) {
@@ -199,6 +198,7 @@ jQuery.Callbacks = function( options ) {
                     * */
                     if ( firing ) { // 在list数组回调函数没有执行完，firing都是true
                         // 在正在执行回调函数中，会把再次触发的fire()的参数压入stack中,则不是立即就触发
+                        // args指向什么呢？
                         stack.push( args ); // 把上下文和参数存入stack中
                     } else { // 如果回调函数列表未在执行，则调用工具函数放fire()执行所有回调函数列表
                         fire( args );

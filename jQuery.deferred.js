@@ -67,23 +67,26 @@ jQuery.extend({
             // promise.done();promise.fail();promise.progress()
             promise[ tuple[1] ] = list.add;
             // 确保触发了reject而resolve不会被触发
+            // 给doneList和failList添加三个回调函数
+            // doneList:[state,failList.disable,proceeList.lock]
+            // failList:[state,doneList.disable,proceeList.lock]
             if ( stateString ) {
                 list.add(function() {
-                    state = stateString; // state = [ resolved | rejected ]
-                    // 一个调用禁止另一个回调函数的所有，对数组的notice进行lock
-                    // [ reject_list | resolve_list ].disable; progress_list.lock
+                    state = stateString;
                 }, tuples[ i ^ 1 ][ 2 ].disable, tuples[ 2 ][ 2 ].lock );
             }
-            // deferred[ resolve | reject | notify ],deferred下的方法
+            // 给deferred对象扩充6个方法,使用延迟对象.resolve(),reject()就是运行下面代码
+            // resolve,reject,notify是cb,fireWith，执行回调函数
             deferred[ tuple[0] ] = function() {
                 deferred[ tuple[0] + "With" ]( this === deferred ? promise : this, arguments );
                 return this;
             };
+            // resolveWith/rejectWith/notifyWith是cb.fireWith对列方法引用
             deferred[ tuple[0] + "With" ] = list.fireWith;
         });
 
         // 把deferred对象传给promise.promise(),
-        // 把promise下的state,always,then,promise,pipe,done,fail,promise等方法继承给deferred
+        // 把promise下的state,always,then,promise,pipe,done,fail,process等方法继承给deferred
         // 此时deferred对象与promise对象的不同之处就是：deferred对象有三个状态的方法，resolve,reject,notify
         // 使用promise可以保证延迟对象的状态不会被修改。
         promise.promise( deferred );

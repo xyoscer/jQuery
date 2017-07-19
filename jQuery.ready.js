@@ -21,8 +21,9 @@
  * jQuery( document ).trigger("ready").off("ready");
  */
 (function(window,undefined){
-    var  rootjQuery,  //只含有document对象的jQuery对象
-        readyList,   // 存放ready事件的监听函数
+
+    var  rootjQuery  = jQuery(document),  //只含有document对象的jQuery对象
+         readyList,   // 存放ready事件的监听函数
         // ready事件的主监听函数自己移除方法
         completed = function() {
             // 确保监听的DOMContentLoaded或load只执行一次
@@ -30,6 +31,7 @@
             window.removeEventListener( "load", completed, false );
             jQuery.ready();
         };
+       // rootjQuery = jQuery(document);
     jQuery.fn = jQuery.prototype = {
         init: function( selector, context, rootjQuery ) {
             if(typeof selector === "string"){}
@@ -66,7 +68,7 @@
             }
             // 让DOM准备完毕
             jQuery.isReady = true;
-            // 在ready事件正常触发
+            // 在ready事件正常触发，wait===undefined
             if ( wait !== true && --jQuery.readyWait > 0 ) {
                 return;
             }
@@ -86,7 +88,15 @@
         if ( !readyList ) {
             // 创建一个延迟对象
             readyList = jQuery.Deferred();
-            // 判断DOM加载是否完成
+
+            /**
+             * document.readyState返回一个字符串,指示document对象的加载状态，它有以下几个值：
+             * uninitialized : 尚未开始加载
+             * loading: 正在加载
+             * interactive: 已经加载了必须的内容，此时用户可以操作
+             * complete: 全部加载完成
+             * 当document.readyState的值改变时，就会触发readystatechange事件
+             */
             if ( document.readyState === "complete" ) {
                  // 加延迟是针对IE可能会提前触发
                 setTimeout( jQuery.ready );
@@ -102,7 +112,7 @@
         // 确保延迟对象的状态不被修改
         return readyList.promise( obj );
     };
-    rootjQuery = jQuery(document);
+
 })(window);
 
 
