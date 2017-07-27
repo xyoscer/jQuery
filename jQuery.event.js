@@ -130,7 +130,7 @@ jQuery.event = {
             events, t, handleObj,
             special, handlers, type, namespaces, origType,
             elemData = data_priv.hasData( elem ) && data_priv.get( elem );
-
+        // 过滤没有缓存数据或事件缓存对象的情况
         if ( !elemData || !(events = elemData.events) ) {
             return;
         }
@@ -143,7 +143,7 @@ jQuery.event = {
             type = origType = tmp[1];
             namespaces = ( tmp[2] || "" ).split( "." ).sort();
 
-            // Unbind all events (on this namespace, if provided) for the element
+            // 没有指定事件类型
             if ( !type ) {
                 for ( type in events ) {
                     jQuery.event.remove( elem, type + types[ t ], handler, selector, true );
@@ -156,7 +156,7 @@ jQuery.event = {
             handlers = events[ type ] || [];
             tmp = tmp[2] && new RegExp( "(^|\\.)" + namespaces.join("\\.(?:.*\\.|)") + "(\\.|$)" );
 
-            // Remove matching events
+            // 遍历监听对象数组，从中移除匹配的监听对象
             origCount = j = handlers.length;
             while ( j-- ) {
                 handleObj = handlers[ j ];
@@ -203,7 +203,7 @@ jQuery.event = {
 
         cur = tmp = elem = elem || document;
 
-        // Don't do events on text and comment nodes
+        // 过滤文本节点和注释节点
         if ( elem.nodeType === 3 || elem.nodeType === 8 ) {
             return;
         }
@@ -212,7 +212,7 @@ jQuery.event = {
         if ( rfocusMorph.test( type + jQuery.event.triggered ) ) {
             return;
         }
-
+        // 解析事件类型和命名空间
         if ( type.indexOf(".") >= 0 ) {
             // Namespaced trigger; create a regexp to match event type in handle()
             namespaces = type.split(".");
@@ -322,10 +322,10 @@ jQuery.event = {
 
         return event.result;
     },
-    // 分发事件，执行事件监听函数
+    // 分发事件，执行事件监听函数，是真正绑定到元素上的监听函数
     dispatch: function( event ) {
 
-        // Make a writable jQuery.Event from the native event object
+        // 创建jQuery事件对象，把原生事件对象封装为jQuery事件对象
         event = jQuery.event.fix( event );
 
         var i, j, ret, matched, handleObj,
@@ -511,19 +511,21 @@ jQuery.event = {
     },
     // 事件修正对象集
     special: {
+        // 修正load事件不允许冒泡
         load: {
-            // Prevent triggered image.load events from bubbling to window.load
+            // 表示当前事件类型不支持或不允许冒泡
             noBubble: true
         },
+        // 在未不冒泡的事件应用代理时，需要把事件修正为代理事件
         focus: {
-            // Fire native event if possible so blur/focus sequence is correct
+            //  用于执行特殊的事件响应行为，在触发当前类型的事件时被调用
             trigger: function() {
                 if ( this !== safeActiveElement() && this.focus ) {
                     this.focus();
                     return false;
                 }
             },
-            delegateType: "focusin"
+            delegateType: "focusin" // 表示代理事件使用的事件类型
         },
         blur: {
             trigger: function() {
@@ -532,7 +534,7 @@ jQuery.event = {
                     return false;
                 }
             },
-            delegateType: "focusout"
+            delegateType: "focusout" // 表示代理事件时使用的事件类型
         },
         click: {
             // For checkbox, fire native event so checked state will be right
@@ -543,11 +545,12 @@ jQuery.event = {
                 }
             },
 
-            // For cross-browser consistency, don't fire native .click() on links
+            // 用于执行特殊的默认行为，在触发默认行为时被调用，如果该方法返回false则触发浏览器的默认行为
             _default: function( event ) {
                 return jQuery.nodeName( event.target, "a" );
             }
         },
+        // 在页面刷新或关闭时触发，
         beforeunload: {
             postDispatch: function( event ) {
 
@@ -616,7 +619,7 @@ jQuery.Event = function( src, props ) {
     if ( props ) {
         jQuery.extend( this, props );
     }
-    // 修正时间戳 这个时间戳指定了浏览器创建事件的事件，
+    // 修正时间戳 这个时间戳指定了浏览器创建事件的时间，
     // 如果参数src是事件类型，则把属性设置成当前时间
     this.timeStamp = src && src.timeStamp || jQuery.now();
     // 设置当前的jQuery对象有jQuery.expando属性，在事件系统的其他部分中通过jQuery.expando
@@ -651,6 +654,7 @@ jQuery.Event.prototype = {
         this.stopPropagation();
     }
 };
+
 // 初始化事件 mouseenter,mouseleave,submit,change,focus,blur对应的修正对象
 jQuery.each({
     mouseenter: "mouseover",
@@ -769,8 +773,16 @@ jQuery.fn.extend({
         return this.on( types, selector, data, fn, 1 );
     },
     // 统一的事件移除方法
+    /**
+     * 移除事件
+     * @param types 一个或多个空格隔开的事件类型和可选的命名空间
+     * @param selector 选择器表达式字符串，用于移除代理事件
+     * @param fn 待移除的监听函数
+     * @returns {*}
+     */
     off: function( types, selector, fn ) {
         var handleObj, type;
+        // 参数types是被分发的jQuery事件对象的情况
         if ( types && types.preventDefault && types.handleObj ) {
             // ( event )  dispatched jQuery.Event
             handleObj = types.handleObj;
@@ -781,6 +793,7 @@ jQuery.fn.extend({
             );
             return this;
         }
+        // 参数是对象情况
         if ( typeof types === "object" ) {
             // ( types-object [, selector] )
             for ( type in types ) {
@@ -788,6 +801,7 @@ jQuery.fn.extend({
             }
             return this;
         }
+        // 根据参数类型修正参数
         if ( selector === false || typeof selector === "function" ) {
             // ( types [, fn] )
             fn = selector;
@@ -796,6 +810,7 @@ jQuery.fn.extend({
         if ( fn === false ) {
             fn = returnFalse;
         }
+        // 返回当前匹配元素集合
         return this.each(function() {
             jQuery.event.remove( this, types, fn, selector );
         });
